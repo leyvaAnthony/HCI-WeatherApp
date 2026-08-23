@@ -56,34 +56,6 @@ h1 {
     cursor: pointer;
 }
 
-.search-area {
-    display: none;
-    gap: 8px;
-    margin-top: 15px;
-}
-
-.search-area.open {
-    display: flex;
-}
-
-.search-area input {
-    min-width: 0;
-    flex: 1;
-    padding: 11px 13px;
-    border: 1px solid #d4deea;
-    border-radius: 12px;
-    font-size: 15px;
-}
-
-.search-area button {
-    border: 0;
-    padding: 0 15px;
-    border-radius: 12px;
-    cursor: pointer;
-}
-
-
-
 .current-weather {
     text-align: center;
 
