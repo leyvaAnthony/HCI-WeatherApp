@@ -16,6 +16,9 @@ body {
     gap: 8px;
     margin-top: 15px;
 }
+.search-area.open {
+    display: flex;
+}
 
 .app {
     width: 100%;
