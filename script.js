@@ -201,6 +201,77 @@ async function loadWeather() {
 
     $("carWashAdvice").textContent = `${carWashMessage}`;
 
+    console.log("Calculating dog walk advice...");
+
+const temp = current.temperature_2m;
+const feelsLike = current.apparent_temperature;
+const windSpeed = current.wind_speed_10m;
+const humidity = current.relative_humidity_2m;
+
+
+const nextFewHoursRain = data.hourly.precipitation_probability.slice(
+    startHour,
+    startHour + 4
+);
+const maxRainChanceDog = Math.max(...nextFewHoursRain);
+
+
+const currentWeatherCode = current.weather_code;
+const isRaining = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(currentWeatherCode);
+const isSnowing = [71, 73, 75, 77, 85, 86].includes(currentWeatherCode);
+
+
+let dogWalkMessage = "";
+let issues = [];
+
+if (feelsLike > 85) {
+    issues.push("Too hot! Risk of burned paws and heatstroke.");
+} else if (feelsLike > 75) {
+    issues.push("Warm - bring water and avoid hot pavement.");
+} else if (feelsLike < 20) {
+    issues.push("Too cold! Risk of frostbite on paws.");
+} else if (feelsLike < 32) {
+    issues.push("Cold - consider a dog coat and limit time outside.");
+}
+
+if (isRaining || isSnowing) {
+    issues.push("Currently raining/snowing - not ideal for walking.");
+} else if (maxRainChanceDog > 70) {
+    issues.push("High chance of rain soon - bring an umbrella or wait.");
+} else if (maxRainChanceDog > 40) {
+    issues.push("Possible rain - might want to bring an umbrella just in case.");
+}
+
+if (windSpeed > 30) {
+    issues.push(" Very windy! Dangerous conditions for walking.");
+} else if (windSpeed > 20) {
+    issues.push(" Windy - may be uncomfortable for you and your dog.");
+}
+
+if (issues.length === 0) {
+    
+    if (feelsLike >= 50 && feelsLike <= 75 && maxRainChanceDog < 30) {
+        dogWalkMessage = "Perfect day for a dog walk! ";
+    } else {
+        dogWalkMessage = "Good conditions for a walk!";
+    }
+} else if (issues.length <= 2) {
+    dogWalkMessage = "Proceed with caution: " + issues.join(" ");
+} else {
+    dogWalkMessage = "Not recommended today: " + issues.join(" ");
+}
+
+
+dogWalkMessage += ` (${Math.round(feelsLike)}°F feels like)`;
+
+const dogWalkElement = $("dogWalkAdvice");
+if (dogWalkElement) {
+    dogWalkElement.textContent = `${dogWalkMessage}`;
+    console.log("Dog walk advice updated successfully!");
+} else {
+    console.error("Element with id 'dogWalkAdvice' not found!");
+}
+
     $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {
         hour: "numeric",
         minute: "2-digit"
