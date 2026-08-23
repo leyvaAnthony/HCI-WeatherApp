@@ -5,7 +5,7 @@ const state = {
 };
 
 const weatherCodes = {
-    0: ["☀️", "Clear"],
+    0: ["☀️", "Sunny"],
     1: ["🌤️", "Mostly Clear"],
     2: ["⛅", "Partly Cloudy"],
     3: ["☁️", "Overcast"],
