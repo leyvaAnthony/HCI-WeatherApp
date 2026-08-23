@@ -1,7 +1,7 @@
 const state = {
     latitude: 41.8781,
     longitude: -87.6298,
-    locationName: "Chicago, IL"
+    locationName: "Alsip, IL"
 };
 
 const weatherCodes = {
