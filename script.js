@@ -162,8 +162,6 @@ async function loadWeather() {
 
     $("dailyList").innerHTML = dailyHTML;
 
-    const hourlyRain = data.hourly.precipitation_probability[startHour] ?? 0;
-    $("rainChance").textContent = `${Math.round(hourlyRain)}%`;
     const nextFewHours = data.hourly.precipitation_probability.slice(
         startHour,
         startHour + 4
