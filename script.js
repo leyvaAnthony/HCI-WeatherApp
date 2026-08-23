@@ -168,6 +168,7 @@ async function loadWeather() {
     );
 
     const maxRainChance = Math.max(...nextFewHours);
+    $("rainChance").textContent = `${Math.round(maxRainChance)}%`;
 
     if (maxRainChance >= 50) {
         $("rainAdvice").textContent = "It is recommended to bring a raincoat or an umbrella!";
