@@ -56,6 +56,9 @@ h1 {
     font-size: 25px;
     cursor: pointer;
 }
+.search-area {
+    display: none !important;
+}
 
 .current-weather {
     text-align: center;
