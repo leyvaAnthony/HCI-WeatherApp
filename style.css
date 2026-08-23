@@ -12,28 +12,50 @@ body {
 }
 
 .search-area {
-    display: flex;  
+    display: flex !important;  
     gap: 8px;
     margin-top: 15px;
+    padding: 0 5px;
 }
+
 .search-area input {
     flex: 1;
     padding: 11px 13px;
-    border: 1px solid #d4deea;
+    border: 2px solid #4a90d9;
     border-radius: 12px;
     font-size: 15px;
+    outline: none;
 }
+
+.search-area input:focus {
+    border-color: #2c6fb0;
+    box-shadow: 0 0 5px rgba(74, 144, 217, 0.3);
+}
+
 .search-area button {
     border: 0;
-    padding: 0 15px;
+    padding: 11px 20px;
     border-radius: 12px;
     background: #4a90d9;
     color: white;
     cursor: pointer;
     font-weight: bold;
+    font-size: 14px;
 }
+
 .search-area button:hover {
     background: #357abd;
+}
+
+.icon-button {
+    display: block !important; 
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: #eef4fb;
+    font-size: 25px;
+    cursor: pointer;
 }
 
 
