@@ -175,6 +175,31 @@ async function loadWeather() {
     } else {
         $("rainAdvice").textContent = "It is not likely to rain within the next few hours!";
     }
+    const dailyRainData = data.daily.precipitation_probability_max;
+    const todayRainChance = dailyRainData[0];
+    const tomorrowRainChance = dailyRainData[1] || 0;
+    const dayAfterRainChance = dailyRainData[2] || 0;
+
+    let carWashMessage = "";
+    let carWashEmoji = "";
+
+    
+    const maxRainNext48 = Math.max(todayRainChance, tomorrowRainChance);
+
+    if (maxRainNext48 < 30) {
+        carWashMessage = "No rain expected in the next 48 hours, so it is recommended to wash your car!";
+    } else {
+        carWashMessage = "Rain is expected in the next 48 hours, so it is not recommended to wash your car!";
+    }
+
+    // Add a note about today specifically
+    if (todayRainChance > 50) {
+        carWashMessage += " Rain likely today!";
+    } else if (tomorrowRainChance > 50) {
+        carWashMessage += " Rain expected tomorrow.";
+    }
+
+    $("carWashAdvice").textContent = `${carWashEmoji} ${carWashMessage}`;
 
     $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {
         hour: "numeric",
