@@ -11,6 +11,12 @@ body {
     color: #172033;
 }
 
+.search-area {
+    display: flex !important;  
+    gap: 8px;
+    margin-top: 15px;
+}
+
 .app {
     width: 100%;
     display: flex;
