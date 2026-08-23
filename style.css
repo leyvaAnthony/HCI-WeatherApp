@@ -12,18 +12,31 @@ body {
 }
 
 .search-area {
-    display: flex !important;  
+    display: flex;  
     gap: 8px;
     margin-top: 15px;
 }
-.search-area.open {
-    display: flex;
+.search-area input {
+    flex: 1;
+    padding: 11px 13px;
+    border: 1px solid #d4deea;
+    border-radius: 12px;
+    font-size: 15px;
 }
-.search-area {
-    display: flex !important;  
-    gap: 8px;
-    margin-top: 15px;
+.search-area button {
+    border: 0;
+    padding: 0 15px;
+    border-radius: 12px;
+    background: #4a90d9;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
 }
+.search-area button:hover {
+    background: #357abd;
+}
+
+
 
 .app {
     width: 100%;
