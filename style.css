@@ -48,7 +48,7 @@ body {
 }
 
 .icon-button {
-    display: block !important; 
+    display: none;
     width: 44px;
     height: 44px;
     border: 0;
@@ -95,19 +95,6 @@ h1 {
     font-size: 28px;
 }
 
-.icon-button {
-    display: none;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    border-radius: 50%;
-    background: #eef4fb;
-    font-size: 25px;
-    cursor: pointer;
-}
-.search-area {
-    display: none !important;
-}
 
 .current-weather {
     text-align: center;
