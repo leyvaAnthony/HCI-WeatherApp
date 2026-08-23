@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="app">
+        <section class="weather-card">
+            <div class="top-row">
+                <div>
+                    <p class="label">Current Weather</p>
+                    <h1 id="location">Chicago, IL</h1>
+                </div>
+                <button id="searchButton" class="icon-button" aria-label="Search">⌕</button>
+            </div>
+
+            <div class="search-area">
+                <input id="locationInput" type="text" placeholder="Search city..." autocomplete="off">
+                <button id="searchSubmit">Search</button>
+            </div>
+
+            <section class="current-weather">
+                <div class="weather-icon" id="weatherIcon">☁️</div>
+                <div class="temperature" id="temperature">--°</div>
+                <div class="condition" id="condition">Loading...</div>
+                <div class="high-low">
+                    <span id="highTemp">H: --°</span>
+                    <span id="lowTemp">L: --°</span>
+                </div>
+            </section>
+
+            <section class="details-grid">
+                <div class="detail-card">
+                    <span class="detail-label">Feels Like</span>
+                    <strong id="feelsLike">--°</strong>
+                </div>
+                <div class="detail-card">
+                    <span class="detail-label">Humidity</span>
+                    <strong id="humidity">--%</strong>
+                </div>
+                <div class="detail-card">
+                    <span class="detail-label">Wind</span>
+                    <strong id="wind">-- mph</strong>
+                </div>
+                <div class="detail-card">
+                    <span class="detail-label">Rain Chance</span>
+                    <strong id="rainChance">--%</strong>
+                </div>
+            </section>
+
+            <section class="forecast-section">
+                <h2>Hourly Forecast</h2>
+                <div class="hourly-list" id="hourlyList"></div>
+            </section>
+
+            <section class="forecast-section">
+                <h2>7-Day Forecast</h2>
+                <div class="daily-list" id="dailyList"></div>
+            </section>
+
+            <p class="status" id="status"></p>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
