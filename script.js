@@ -164,6 +164,18 @@ async function loadWeather() {
 
     const hourlyRain = data.hourly.precipitation_probability[startHour] ?? 0;
     $("rainChance").textContent = `${Math.round(hourlyRain)}%`;
+    const nextFewHours = data.hourly.precipitation_probability.slice(
+        startHour,
+        startHour + 4
+    );
+
+    const maxRainChance = Math.max(...nextFewHours);
+
+    if (maxRainChance >= 50) {
+        $("rainAdvice").textContent = "It is recommended to bring a raincoat or an umbrella!";
+    } else {
+        $("rainAdvice").textContent = "It is not likely to rain within the next few hours!";
+    }
 
     $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {
         hour: "numeric",
