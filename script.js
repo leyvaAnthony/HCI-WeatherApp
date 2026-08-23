@@ -225,27 +225,27 @@ let dogWalkMessage = "";
 let issues = [];
 
 if (feelsLike > 85) {
-    issues.push("Too hot! Risk of burned paws and heatstroke.");
+    issues.push("Too hot to walk your dog!");
 } else if (feelsLike > 75) {
-    issues.push("Warm - bring water and avoid hot pavement.");
+    issues.push("It is warm, bring water and stay hydrated!");
 } else if (feelsLike < 20) {
-    issues.push("Too cold! Risk of frostbite on paws.");
+    issues.push("Too cold to walk your dog!");
 } else if (feelsLike < 32) {
-    issues.push("Cold - consider a dog coat and limit time outside.");
+    issues.push("It is cold, suggest bringing a dog coat!");
 }
 
 if (isRaining || isSnowing) {
-    issues.push("Currently raining/snowing - not ideal for walking.");
+    issues.push("Currently raining/snowing, not ideal for walking.");
 } else if (maxRainChanceDog > 70) {
-    issues.push("High chance of rain soon - bring an umbrella or wait.");
+    issues.push("High chance of rain soon, bring an umbrella or wait.");
 } else if (maxRainChanceDog > 40) {
-    issues.push("Possible rain - might want to bring an umbrella just in case.");
+    issues.push("Possible rain, might want to bring an umbrella just in case.");
 }
 
 if (windSpeed > 30) {
-    issues.push(" Very windy! Dangerous conditions for walking.");
+    issues.push("It is very windy, dangerous for walking your dog!");
 } else if (windSpeed > 20) {
-    issues.push(" Windy - may be uncomfortable for you and your dog.");
+    issues.push("It is windy, may be uncomfortable for you and your dog!");
 }
 
 if (issues.length === 0) {
