@@ -181,7 +181,7 @@ async function loadWeather() {
     const dayAfterRainChance = dailyRainData[2] || 0;
 
     let carWashMessage = "";
-    let carWashEmoji = "";
+    
 
     
     const maxRainNext48 = Math.max(todayRainChance, tomorrowRainChance);
@@ -192,14 +192,14 @@ async function loadWeather() {
         carWashMessage = "Rain is expected in the next 48 hours, so it is not recommended to wash your car!";
     }
 
-    // Add a note about today specifically
+    
     if (todayRainChance > 50) {
         carWashMessage += " Rain likely today!";
     } else if (tomorrowRainChance > 50) {
         carWashMessage += " Rain expected tomorrow.";
     }
 
-    $("carWashAdvice").textContent = `${carWashEmoji} ${carWashMessage}`;
+    $("carWashAdvice").textContent = `${carWashMessage}`;
 
     $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {
         hour: "numeric",
