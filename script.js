@@ -276,7 +276,7 @@ async function loadWeather() {
         rainAdviceEl.className = 'recommendation-status caution';
         if (rainCard) rainCard.classList.remove('warning');
     } else {
-        rainAdviceEl.textContent = '✅ No rain needed';
+        rainAdviceEl.textContent = '✅ No rain coat/umbrella needed';
         rainAdviceEl.className = 'recommendation-status good';
         if (rainCard) rainCard.classList.remove('warning');
     }
@@ -312,14 +312,14 @@ async function loadWeather() {
     const dogCard = document.querySelector('.dog-card');
     
     if (feelsLike > 85) {
-        dogWalkEl.textContent = '🔥 Too hot! Wait';
+        dogWalkEl.textContent = '🔥 Too hot! Not recommended';
         dogWalkEl.className = 'recommendation-status bad';
         if (dogCard) {
             dogCard.classList.add('warning');
             dogCard.classList.remove('success');
         }
     } else if (feelsLike < 32) {
-        dogWalkEl.textContent = '❄️ Too cold!';
+        dogWalkEl.textContent = '❄️ Too cold! Not recommended';
         dogWalkEl.className = 'recommendation-status bad';
         if (dogCard) {
             dogCard.classList.add('warning');
