@@ -11,15 +11,14 @@ body {
 }
 
 /* ==========================================
-   SEARCH AREA - Keep your existing styles
+   SEARCH AREA
    ========================================== */
 .search-area {
-    display: flex !important;  
+    position: relative;
+    display: flex !important;
     gap: 8px;
     margin-top: 15px;
     padding: 0 5px;
-    /* NEW: Needed for dropdown positioning */
-    position: relative;
 }
 
 .search-area input {
@@ -52,7 +51,7 @@ body {
 }
 
 /* ==========================================
-   NEW: SUGGESTIONS DROPDOWN
+   SUGGESTIONS DROPDOWN
    ========================================== */
 #suggestionsDropdown {
     position: absolute;
@@ -93,7 +92,6 @@ body {
     background-color: #d0e2f7;
 }
 
-/* Scrollbar styling for dropdown */
 #suggestionsDropdown::-webkit-scrollbar {
     width: 6px;
 }
@@ -113,7 +111,7 @@ body {
 }
 
 /* ==========================================
-   ICON BUTTON - Keep your existing styles
+   ICON BUTTON
    ========================================== */
 .icon-button {
     display: none;
@@ -127,7 +125,7 @@ body {
 }
 
 /* ==========================================
-   APP & WEATHER CARD - Keep existing
+   APP & WEATHER CARD
    ========================================== */
 .app {
     width: 100%;
@@ -143,7 +141,6 @@ body {
     border-radius: 28px;
     padding: 22px;
     box-shadow: 0 10px 35px rgba(30, 60, 90, 0.12);
-    /* NEW: Ensures dropdown can overflow outside card */
     overflow: visible;
 }
 
@@ -167,7 +164,7 @@ h1 {
 }
 
 /* ==========================================
-   CURRENT WEATHER - Keep existing
+   CURRENT WEATHER
    ========================================== */
 .current-weather {
     text-align: center;
@@ -202,7 +199,7 @@ h1 {
 }
 
 /* ==========================================
-   DETAILS GRID - Keep existing
+   DETAILS GRID
    ========================================== */
 .details-grid {
     display: grid;
@@ -214,6 +211,11 @@ h1 {
     background: #f2f6fa;
     border-radius: 16px;
     padding: 14px;
+    transition: transform 0.2s;
+}
+
+.detail-card:hover {
+    transform: translateY(-2px);
 }
 
 .detail-label {
@@ -221,6 +223,8 @@ h1 {
     font-size: 12px;
     opacity: 0.6;
     margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .detail-card strong {
@@ -228,7 +232,114 @@ h1 {
 }
 
 /* ==========================================
-   FORECAST SECTIONS - Keep existing
+   RECOMMENDATION CARDS - NEW VISUAL STYLES
+   ========================================== */
+
+/* Make recommendation cards full width */
+.recommendation-card {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border-left: 4px solid #4a90d9;
+    transition: all 0.3s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateX(4px);
+}
+
+/* Different colors for each type */
+.rain-card {
+    border-left-color: #4a90d9;
+    background: #f0f7ff;
+}
+
+.car-card {
+    border-left-color: #34a853;
+    background: #f0faf4;
+}
+
+.dog-card {
+    border-left-color: #f9ab00;
+    background: #fffbf0;
+}
+
+/* Warning states */
+.rain-card.warning {
+    border-left-color: #ea4335;
+    background: #fef0ee;
+}
+
+.car-card.warning {
+    border-left-color: #ea4335;
+    background: #fef0ee;
+}
+
+.dog-card.warning {
+    border-left-color: #ea4335;
+    background: #fef0ee;
+}
+
+.dog-card.success {
+    border-left-color: #34a853;
+    background: #f0faf4;
+}
+
+.recommendation-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.recommendation-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.recommendation-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.5;
+    margin-bottom: 2px;
+}
+
+.recommendation-status {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #172033;
+    line-height: 1.3;
+}
+
+/* Status colors */
+.recommendation-status.good {
+    color: #34a853;
+}
+
+.recommendation-status.caution {
+    color: #f9ab00;
+}
+
+.recommendation-status.bad {
+    color: #ea4335;
+}
+
+/* ==========================================
+   FORECAST SECTIONS
    ========================================== */
 .forecast-section {
     margin-top: 28px;
@@ -308,7 +419,7 @@ h1 {
 }
 
 /* ==========================================
-   STATUS - Keep existing
+   STATUS
    ========================================== */
 .status {
     min-height: 20px;
@@ -319,7 +430,7 @@ h1 {
 }
 
 /* ==========================================
-   RESPONSIVE - Keep existing
+   RESPONSIVE
    ========================================== */
 @media (min-width: 700px) {
     .weather-card {
@@ -327,9 +438,6 @@ h1 {
     }
 }
 
-/* ==========================================
-   NEW: SMALL SCREEN ADJUSTMENTS
-   ========================================== */
 @media (max-width: 480px) {
     #suggestionsDropdown {
         max-height: 160px;
@@ -339,5 +447,19 @@ h1 {
         padding: 8px 12px;
         font-size: 13px;
     }
+    
+    .recommendation-card {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+    
+    .recommendation-icon {
+        font-size: 22px;
+        width: 38px;
+        height: 38px;
+    }
+    
+    .recommendation-status {
+        font-size: 13px;
+    }
 }
-
