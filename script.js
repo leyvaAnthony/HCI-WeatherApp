@@ -54,34 +54,134 @@ function formatHour(dateString) {
     });
 }
 
-async function searchLocation(city) {
-    const url =
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}` +
-        `&count=1&language=en&format=json`;
+// =============================================
+// NEW: LOCATION SEARCH WITH DROPDOWN
+// =============================================
 
+let currentSuggestions = [];
+
+async function searchLocations(query) {
+    if (query.length < 2) return [];
+    
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) return [];
+        const data = await response.json();
+        return data.results || [];
+    } catch (error) {
+        console.error('Error searching locations:', error);
+        return [];
+    }
+}
+
+function showSuggestions(locations) {
+    const dropdown = document.getElementById('suggestionsDropdown');
+    if (!dropdown) return;
+    
+    if (!locations || locations.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+    }
+    
+    currentSuggestions = locations;
+    dropdown.innerHTML = '';
+    
+    locations.forEach((loc) => {
+        const li = document.createElement('li');
+        
+        // Build display name: City, State/Region, Country
+        let displayName = loc.name;
+        if (loc.admin1) displayName += `, ${loc.admin1}`;
+        if (loc.country) displayName += `, ${loc.country}`;
+        
+        // Add country code in parentheses for extra clarity
+        if (loc.country_code) displayName += ` (${loc.country_code.toUpperCase()})`;
+        
+        li.textContent = displayName;
+        li.dataset.lat = loc.latitude;
+        li.dataset.lon = loc.longitude;
+        li.dataset.name = loc.name;
+        li.dataset.admin1 = loc.admin1 || '';
+        li.dataset.country = loc.country || '';
+        
+        li.addEventListener('click', function() {
+            const locationData = {
+                name: this.dataset.name,
+                admin1: this.dataset.admin1,
+                country: this.dataset.country,
+                latitude: parseFloat(this.dataset.lat),
+                longitude: parseFloat(this.dataset.lon)
+            };
+            selectLocation(locationData);
+        });
+        
+        dropdown.appendChild(li);
+    });
+    
+    dropdown.style.display = 'block';
+}
+
+function selectLocation(location) {
+    const dropdown = document.getElementById('suggestionsDropdown');
+    const input = document.getElementById('locationInput');
+    
+    // Update input field
+    let displayName = location.name;
+    if (location.admin1) displayName += `, ${location.admin1}`;
+    if (location.country) displayName += `, ${location.country}`;
+    input.value = displayName;
+    
+    // Hide dropdown
+    if (dropdown) dropdown.style.display = 'none';
+    
+    // Update state and load weather
+    state.latitude = location.latitude;
+    state.longitude = location.longitude;
+    state.locationName = displayName;
+    
+    loadWeather().catch((error) => {
+        $("status").textContent = error.message;
+    });
+}
+
+// =============================================
+// MODIFIED: searchLocation function
+// =============================================
+
+async function searchLocation(city) {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+    
     const response = await fetch(url);
     if (!response.ok) throw new Error("Could not search for that location.");
-
+    
     const data = await response.json();
-
+    
     if (!data.results || data.results.length === 0) {
         throw new Error("Location not found.");
     }
-
+    
     const result = data.results[0];
-
+    
     state.latitude = result.latitude;
     state.longitude = result.longitude;
-
+    
     const region = result.admin1 ? `, ${result.admin1}` : "";
-    state.locationName = `${result.name}${region}`;
-
+    const country = result.country ? `, ${result.country}` : "";
+    state.locationName = `${result.name}${region}${country}`;
+    
     await loadWeather();
 }
 
-async function loadWeather() {
-    $("status").textContent = "Updating weather...";
+// =============================================
+// MODIFIED: loadWeather function
+// =============================================
 
+async function loadWeather() {
+    const statusEl = $("status");
+    if (statusEl) statusEl.textContent = "Updating weather...";
+    
     const params = new URLSearchParams({
         latitude: state.latitude,
         longitude: state.longitude,
@@ -93,20 +193,20 @@ async function loadWeather() {
         timezone: "auto",
         forecast_days: "7"
     });
-
+    
     const response = await fetch(
         `https://api.open-meteo.com/v1/forecast?${params.toString()}`
     );
-
+    
     if (!response.ok) {
         throw new Error("Could not load weather data.");
     }
-
+    
     const data = await response.json();
-
+    
     const current = data.current;
     const currentInfo = getWeatherInfo(current.weather_code);
-
+    
     $("location").textContent = state.locationName;
     $("weatherIcon").textContent = currentInfo[0];
     $("temperature").textContent = `${Math.round(current.temperature_2m)}°`;
@@ -116,12 +216,12 @@ async function loadWeather() {
     $("wind").textContent = `${Math.round(current.wind_speed_10m)} mph`;
     $("highTemp").textContent = `H: ${Math.round(data.daily.temperature_2m_max[0])}°`;
     $("lowTemp").textContent = `L: ${Math.round(data.daily.temperature_2m_min[0])}°`;
-
+    
     const currentHourIndex = data.hourly.time.findIndex(
         (time) => time >= current.time
     );
     const startHour = currentHourIndex >= 0 ? currentHourIndex : 0;
-
+    
     const hourlyHTML = data.hourly.time
         .slice(startHour, startHour + 12)
         .map((time, index) => {
@@ -136,14 +236,14 @@ async function loadWeather() {
             `;
         })
         .join("");
-
+    
     $("hourlyList").innerHTML = hourlyHTML;
-
+    
     const dailyHTML = data.daily.time
         .map((date, i) => {
             const info = getWeatherInfo(data.daily.weather_code[i]);
             const rain = data.daily.precipitation_probability_max[i];
-
+            
             return `
                 <div class="day-card">
                     <div>
@@ -159,124 +259,166 @@ async function loadWeather() {
             `;
         })
         .join("");
-
+    
     $("dailyList").innerHTML = dailyHTML;
-
+    
     const nextFewHours = data.hourly.precipitation_probability.slice(
         startHour,
         startHour + 4
     );
-
+    
     const maxRainChance = Math.max(...nextFewHours);
     $("rainChance").textContent = `${Math.round(maxRainChance)}%`;
-
+    
     if (maxRainChance >= 50) {
         $("rainAdvice").textContent = "It is recommended to bring a raincoat or an umbrella!";
     } else {
         $("rainAdvice").textContent = "It is not likely to rain within the next few hours!";
     }
+    
     const dailyRainData = data.daily.precipitation_probability_max;
     const todayRainChance = dailyRainData[0];
     const tomorrowRainChance = dailyRainData[1] || 0;
     const dayAfterRainChance = dailyRainData[2] || 0;
-
+    
     let carWashMessage = "";
     
-
-    
     const maxRainNext48 = Math.max(todayRainChance, tomorrowRainChance);
-
+    
     if (maxRainNext48 < 30) {
         carWashMessage = "No rain expected in the next 48 hours, so it is recommended to wash your car!";
     } else {
         carWashMessage = "Rain is expected in the next 48 hours, so it is not recommended to wash your car!";
     }
-
     
     if (todayRainChance > 50) {
         carWashMessage += " Rain likely today!";
     } else if (tomorrowRainChance > 50) {
         carWashMessage += " Rain expected tomorrow.";
     }
-
-    $("carWashAdvice").textContent = `${carWashMessage}`;
-
-    console.log("Calculating dog walk advice...");
-
-const temp = current.temperature_2m;
-const feelsLike = current.apparent_temperature;
-const windSpeed = current.wind_speed_10m;
-const humidity = current.relative_humidity_2m;
-
-
-const nextFewHoursRain = data.hourly.precipitation_probability.slice(
-    startHour,
-    startHour + 4
-);
-const maxRainChanceDog = Math.max(...nextFewHoursRain);
-
-
-const currentWeatherCode = current.weather_code;
-const isRaining = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(currentWeatherCode);
-const isSnowing = [71, 73, 75, 77, 85, 86].includes(currentWeatherCode);
-
-
-let dogWalkMessage = "";
-let issues = [];
-
-if (feelsLike > 85) {
-    issues.push("Too hot to walk your dog!");
-} else if (feelsLike > 75) {
-    issues.push("It is warm, bring water and stay hydrated!");
-} else if (feelsLike < 20) {
-    issues.push("Too cold to walk your dog!");
-} else if (feelsLike < 32) {
-    issues.push("It is cold, suggest bringing a dog coat!");
-}
-
-if (isRaining || isSnowing) {
-    issues.push("Currently raining/snowing, not ideal for walking.");
-} else if (maxRainChanceDog > 70) {
-    issues.push("High chance of rain soon, bring an umbrella or wait.");
-} else if (maxRainChanceDog > 40) {
-    issues.push("Possible rain, might want to bring an umbrella just in case.");
-}
-
-if (windSpeed > 30) {
-    issues.push("It is very windy, dangerous for walking your dog!");
-} else if (windSpeed > 20) {
-    issues.push("It is windy, may be uncomfortable for you and your dog!");
-}
-
-if (issues.length === 0) {
     
-    if (feelsLike >= 50 && feelsLike <= 75 && maxRainChanceDog < 30) {
-        dogWalkMessage = "Perfect day for a dog walk! ";
-    } else {
-        dogWalkMessage = "Good conditions for a walk!";
+    $("carWashAdvice").textContent = `${carWashMessage}`;
+    
+    console.log("Calculating dog walk advice...");
+    
+    const temp = current.temperature_2m;
+    const feelsLike = current.apparent_temperature;
+    const windSpeed = current.wind_speed_10m;
+    const humidity = current.relative_humidity_2m;
+    
+    const nextFewHoursRain = data.hourly.precipitation_probability.slice(
+        startHour,
+        startHour + 4
+    );
+    const maxRainChanceDog = Math.max(...nextFewHoursRain);
+    
+    const currentWeatherCode = current.weather_code;
+    const isRaining = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(currentWeatherCode);
+    const isSnowing = [71, 73, 75, 77, 85, 86].includes(currentWeatherCode);
+    
+    let dogWalkMessage = "";
+    let issues = [];
+    
+    if (feelsLike > 85) {
+        issues.push("Too hot to walk your dog!");
+    } else if (feelsLike > 75) {
+        issues.push("It is warm, bring water and stay hydrated!");
+    } else if (feelsLike < 20) {
+        issues.push("Too cold to walk your dog!");
+    } else if (feelsLike < 32) {
+        issues.push("It is cold, suggest bringing a dog coat!");
     }
-} else if (issues.length <= 2) {
-    dogWalkMessage = "Proceed with caution: " + issues.join(" ");
-} else {
-    dogWalkMessage = "Not recommended today: " + issues.join(" ");
+    
+    if (isRaining || isSnowing) {
+        issues.push("Currently raining/snowing, not ideal for walking.");
+    } else if (maxRainChanceDog > 70) {
+        issues.push("High chance of rain soon, bring an umbrella or wait.");
+    } else if (maxRainChanceDog > 40) {
+        issues.push("Possible rain, might want to bring an umbrella just in case.");
+    }
+    
+    if (windSpeed > 30) {
+        issues.push("It is very windy, dangerous for walking your dog!");
+    } else if (windSpeed > 20) {
+        issues.push("It is windy, may be uncomfortable for you and your dog!");
+    }
+    
+    if (issues.length === 0) {
+        if (feelsLike >= 50 && feelsLike <= 75 && maxRainChanceDog < 30) {
+            dogWalkMessage = "Perfect day for a dog walk! ";
+        } else {
+            dogWalkMessage = "Good conditions for a walk!";
+        }
+    } else if (issues.length <= 2) {
+        dogWalkMessage = "Proceed with caution: " + issues.join(" ");
+    } else {
+        dogWalkMessage = "Not recommended today: " + issues.join(" ");
+    }
+    
+    dogWalkMessage += ` (${Math.round(feelsLike)}°F feels like)`;
+    
+    const dogWalkElement = $("dogWalkAdvice");
+    if (dogWalkElement) {
+        dogWalkElement.textContent = `${dogWalkMessage}`;
+        console.log("Dog walk advice updated successfully!");
+    } else {
+        console.error("Element with id 'dogWalkAdvice' not found!");
+    }
+    
+    const statusUpdate = $("status");
+    if (statusUpdate) {
+        statusUpdate.textContent = `Updated ${new Date().toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit"
+        })}`;
+    }
 }
 
+// =============================================
+// NEW: EVENT LISTENERS FOR DROPDOWN
+// =============================================
 
-dogWalkMessage += ` (${Math.round(feelsLike)}°F feels like)`;
+// Search input - show suggestions as user types
+$("locationInput").addEventListener("input", async function() {
+    const query = this.value.trim();
+    const dropdown = document.getElementById('suggestionsDropdown');
+    
+    if (query.length < 2) {
+        if (dropdown) dropdown.style.display = 'none';
+        return;
+    }
+    
+    const locations = await searchLocations(query);
+    showSuggestions(locations);
+});
 
-const dogWalkElement = $("dogWalkAdvice");
-if (dogWalkElement) {
-    dogWalkElement.textContent = `${dogWalkMessage}`;
-    console.log("Dog walk advice updated successfully!");
-} else {
-    console.error("Element with id 'dogWalkAdvice' not found!");
-}
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const searchArea = document.querySelector('.search-area');
+    const dropdown = document.getElementById('suggestionsDropdown');
+    
+    if (searchArea && !searchArea.contains(e.target)) {
+        if (dropdown) dropdown.style.display = 'none';
+    }
+});
 
-    $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit"
-    })}`;
-}
+// Handle Enter key on input
+$("locationInput").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        const dropdown = document.getElementById('suggestionsDropdown');
+        // If dropdown is open and has items, select the first one
+        if (dropdown && dropdown.style.display === 'block' && dropdown.children.length > 0) {
+            dropdown.children[0].click();
+        } else {
+            // Otherwise do regular search
+            $("searchSubmit").click();
+        }
+    }
+});
+
+// =============================================
+// EXISTING EVENT LISTENERS (kept the same)
+// =============================================
 
 $("searchButton").addEventListener("click", () => {
     $("locationInput").focus();
@@ -286,7 +428,7 @@ $("searchButton").addEventListener("click", () => {
 $("searchSubmit").addEventListener("click", async () => {
     const city = $("locationInput").value.trim();
     if (!city) return;
-
+    
     try {
         await searchLocation(city);
     } catch (error) {
@@ -294,11 +436,9 @@ $("searchSubmit").addEventListener("click", async () => {
     }
 });
 
-$("locationInput").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-        $("searchSubmit").click();
-    }
-});
+// =============================================
+// INITIAL LOAD
+// =============================================
 
 loadWeather().catch((error) => {
     $("status").textContent = error.message;
