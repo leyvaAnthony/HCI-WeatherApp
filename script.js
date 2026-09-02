@@ -55,99 +55,92 @@ function formatHour(dateString) {
 }
 
 // =============================================
-// NEW: LOCATION SEARCH WITH DROPDOWN
+// 🔍 AUTOCOMPLETE DROPDOWN
 // =============================================
 
-let currentSuggestions = [];
+const locationInput = document.getElementById('locationInput');
+const suggestionsDropdown = document.getElementById('suggestionsDropdown');
 
-async function searchLocations(query) {
-    if (query.length < 2) return [];
+locationInput.addEventListener('input', async function() {
+    const query = this.value.trim();
     
-    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
-    
-    try {
-        const response = await fetch(url);
-        if (!response.ok) return [];
-        const data = await response.json();
-        return data.results || [];
-    } catch (error) {
-        console.error('Error searching locations:', error);
-        return [];
-    }
-}
-
-function showSuggestions(locations) {
-    const dropdown = document.getElementById('suggestionsDropdown');
-    if (!dropdown) return;
-    
-    if (!locations || locations.length === 0) {
-        dropdown.style.display = 'none';
+    if (query.length < 2) {
+        suggestionsDropdown.innerHTML = '';
+        suggestionsDropdown.style.display = 'none';
         return;
     }
     
-    currentSuggestions = locations;
-    dropdown.innerHTML = '';
-    
-    locations.forEach((loc) => {
-        const li = document.createElement('li');
+    try {
+        const response = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`
+        );
+        const data = await response.json();
+        const locations = data.results || [];
         
-        // Build display name: City, State/Region, Country
-        let displayName = loc.name;
-        if (loc.admin1) displayName += `, ${loc.admin1}`;
-        if (loc.country) displayName += `, ${loc.country}`;
+        suggestionsDropdown.innerHTML = '';
         
-        // Add country code in parentheses for extra clarity
-        if (loc.country_code) displayName += ` (${loc.country_code.toUpperCase()})`;
+        if (locations.length === 0) {
+            suggestionsDropdown.style.display = 'none';
+            return;
+        }
         
-        li.textContent = displayName;
-        li.dataset.lat = loc.latitude;
-        li.dataset.lon = loc.longitude;
-        li.dataset.name = loc.name;
-        li.dataset.admin1 = loc.admin1 || '';
-        li.dataset.country = loc.country || '';
-        
-        li.addEventListener('click', function() {
-            const locationData = {
-                name: this.dataset.name,
-                admin1: this.dataset.admin1,
-                country: this.dataset.country,
-                latitude: parseFloat(this.dataset.lat),
-                longitude: parseFloat(this.dataset.lon)
-            };
-            selectLocation(locationData);
+        locations.forEach((loc) => {
+            const li = document.createElement('li');
+            
+            let displayName = loc.name;
+            if (loc.admin1) displayName += `, ${loc.admin1}`;
+            if (loc.country) displayName += `, ${loc.country}`;
+            
+            li.textContent = displayName;
+            li.dataset.lat = loc.latitude;
+            li.dataset.lon = loc.longitude;
+            li.dataset.displayName = displayName;
+            
+            li.addEventListener('click', function() {
+                locationInput.value = this.dataset.displayName;
+                suggestionsDropdown.innerHTML = '';
+                suggestionsDropdown.style.display = 'none';
+                
+                state.latitude = parseFloat(this.dataset.lat);
+                state.longitude = parseFloat(this.dataset.lon);
+                state.locationName = this.dataset.displayName;
+                
+                loadWeather().catch((error) => {
+                    document.getElementById('status').textContent = error.message;
+                });
+            });
+            
+            suggestionsDropdown.appendChild(li);
         });
         
-        dropdown.appendChild(li);
-    });
-    
-    dropdown.style.display = 'block';
-}
+        suggestionsDropdown.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error fetching locations:', error);
+        suggestionsDropdown.style.display = 'none';
+    }
+});
 
-function selectLocation(location) {
-    const dropdown = document.getElementById('suggestionsDropdown');
-    const input = document.getElementById('locationInput');
-    
-    // Update input field
-    let displayName = location.name;
-    if (location.admin1) displayName += `, ${location.admin1}`;
-    if (location.country) displayName += `, ${location.country}`;
-    input.value = displayName;
-    
-    // Hide dropdown
-    if (dropdown) dropdown.style.display = 'none';
-    
-    // Update state and load weather
-    state.latitude = location.latitude;
-    state.longitude = location.longitude;
-    state.locationName = displayName;
-    
-    loadWeather().catch((error) => {
-        $("status").textContent = error.message;
-    });
-}
+document.addEventListener('click', function(e) {
+    const searchArea = document.querySelector('.search-area');
+    if (searchArea && !searchArea.contains(e.target)) {
+        suggestionsDropdown.innerHTML = '';
+        suggestionsDropdown.style.display = 'none';
+    }
+});
+
+locationInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const firstItem = suggestionsDropdown.querySelector('li');
+        if (firstItem) {
+            firstItem.click();
+            e.preventDefault();
+        }
+    }
+});
 
 // =============================================
-// MODIFIED: searchLocation function
+// 🌤️ WEATHER FUNCTIONS
 // =============================================
 
 async function searchLocation(city) {
@@ -173,10 +166,6 @@ async function searchLocation(city) {
     
     await loadWeather();
 }
-
-// =============================================
-// MODIFIED: loadWeather function
-// =============================================
 
 async function loadWeather() {
     const statusEl = $("status");
@@ -270,100 +259,96 @@ async function loadWeather() {
     const maxRainChance = Math.max(...nextFewHours);
     $("rainChance").textContent = `${Math.round(maxRainChance)}%`;
     
-    if (maxRainChance >= 50) {
-        $("rainAdvice").textContent = "It is recommended to bring a raincoat or an umbrella!";
+    // =============================================
+    // 📝 SHORT RECOMMENDATIONS
+    // =============================================
+    
+    // 1. RAIN ADVICE
+    const rainAdviceEl = document.getElementById('rainAdvice');
+    const rainCard = document.querySelector('.rain-card');
+    
+    if (maxRainChance >= 70) {
+        rainAdviceEl.textContent = '☔ Bring umbrella';
+        rainAdviceEl.className = 'recommendation-status bad';
+        if (rainCard) rainCard.classList.add('warning');
+    } else if (maxRainChance >= 40) {
+        rainAdviceEl.textContent = '🌂 Might rain';
+        rainAdviceEl.className = 'recommendation-status caution';
+        if (rainCard) rainCard.classList.remove('warning');
     } else {
-        $("rainAdvice").textContent = "It is not likely to rain within the next few hours!";
+        rainAdviceEl.textContent = '✅ No rain needed';
+        rainAdviceEl.className = 'recommendation-status good';
+        if (rainCard) rainCard.classList.remove('warning');
     }
     
+    // 2. CAR WASH ADVICE
     const dailyRainData = data.daily.precipitation_probability_max;
     const todayRainChance = dailyRainData[0];
     const tomorrowRainChance = dailyRainData[1] || 0;
-    const dayAfterRainChance = dailyRainData[2] || 0;
-    
-    let carWashMessage = "";
-    
     const maxRainNext48 = Math.max(todayRainChance, tomorrowRainChance);
     
+    const carWashEl = document.getElementById('carWashAdvice');
+    const carCard = document.querySelector('.car-card');
+    
     if (maxRainNext48 < 30) {
-        carWashMessage = "No rain expected in the next 48 hours, so it is recommended to wash your car!";
+        carWashEl.textContent = '✅ Good to wash';
+        carWashEl.className = 'recommendation-status good';
+        if (carCard) carCard.classList.remove('warning');
     } else {
-        carWashMessage = "Rain is expected in the next 48 hours, so it is not recommended to wash your car!";
+        carWashEl.textContent = '⛔ Rain coming';
+        carWashEl.className = 'recommendation-status bad';
+        if (carCard) carCard.classList.add('warning');
     }
     
-    if (todayRainChance > 50) {
-        carWashMessage += " Rain likely today!";
-    } else if (tomorrowRainChance > 50) {
-        carWashMessage += " Rain expected tomorrow.";
-    }
-    
-    $("carWashAdvice").textContent = `${carWashMessage}`;
-    
-    console.log("Calculating dog walk advice...");
-    
-    const temp = current.temperature_2m;
+    // 3. DOG WALK ADVICE
     const feelsLike = current.apparent_temperature;
     const windSpeed = current.wind_speed_10m;
-    const humidity = current.relative_humidity_2m;
-    
-    const nextFewHoursRain = data.hourly.precipitation_probability.slice(
-        startHour,
-        startHour + 4
-    );
-    const maxRainChanceDog = Math.max(...nextFewHoursRain);
-    
+    const maxRainChanceDog = Math.max(...nextFewHours);
     const currentWeatherCode = current.weather_code;
     const isRaining = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(currentWeatherCode);
     const isSnowing = [71, 73, 75, 77, 85, 86].includes(currentWeatherCode);
     
-    let dogWalkMessage = "";
-    let issues = [];
+    const dogWalkEl = document.getElementById('dogWalkAdvice');
+    const dogCard = document.querySelector('.dog-card');
     
     if (feelsLike > 85) {
-        issues.push("Too hot to walk your dog!");
-    } else if (feelsLike > 75) {
-        issues.push("It is warm, bring water and stay hydrated!");
-    } else if (feelsLike < 20) {
-        issues.push("Too cold to walk your dog!");
-    } else if (feelsLike < 32) {
-        issues.push("It is cold, suggest bringing a dog coat!");
-    }
-    
-    if (isRaining || isSnowing) {
-        issues.push("Currently raining/snowing, not ideal for walking.");
-    } else if (maxRainChanceDog > 70) {
-        issues.push("High chance of rain soon, bring an umbrella or wait.");
-    } else if (maxRainChanceDog > 40) {
-        issues.push("Possible rain, might want to bring an umbrella just in case.");
-    }
-    
-    if (windSpeed > 30) {
-        issues.push("It is very windy, dangerous for walking your dog!");
-    } else if (windSpeed > 20) {
-        issues.push("It is windy, may be uncomfortable for you and your dog!");
-    }
-    
-    if (issues.length === 0) {
-        if (feelsLike >= 50 && feelsLike <= 75 && maxRainChanceDog < 30) {
-            dogWalkMessage = "Perfect day for a dog walk! ";
-        } else {
-            dogWalkMessage = "Good conditions for a walk!";
+        dogWalkEl.textContent = '🔥 Too hot! Wait';
+        dogWalkEl.className = 'recommendation-status bad';
+        if (dogCard) {
+            dogCard.classList.add('warning');
+            dogCard.classList.remove('success');
         }
-    } else if (issues.length <= 2) {
-        dogWalkMessage = "Proceed with caution: " + issues.join(" ");
+    } else if (feelsLike < 32) {
+        dogWalkEl.textContent = '❄️ Too cold!';
+        dogWalkEl.className = 'recommendation-status bad';
+        if (dogCard) {
+            dogCard.classList.add('warning');
+            dogCard.classList.remove('success');
+        }
+    } else if (isRaining || isSnowing) {
+        dogWalkEl.textContent = '🌧️ Not ideal';
+        dogWalkEl.className = 'recommendation-status caution';
+        if (dogCard) {
+            dogCard.classList.remove('warning', 'success');
+        }
+    } else if (feelsLike >= 50 && feelsLike <= 75 && maxRainChanceDog < 30) {
+        dogWalkEl.textContent = '🐕 Perfect! Go now';
+        dogWalkEl.className = 'recommendation-status good';
+        if (dogCard) {
+            dogCard.classList.add('success');
+            dogCard.classList.remove('warning');
+        }
     } else {
-        dogWalkMessage = "Not recommended today: " + issues.join(" ");
+        dogWalkEl.textContent = '⚠️ Proceed with care';
+        dogWalkEl.className = 'recommendation-status caution';
+        if (dogCard) {
+            dogCard.classList.remove('warning', 'success');
+        }
     }
     
-    dogWalkMessage += ` (${Math.round(feelsLike)}°F feels like)`;
-    
-    const dogWalkElement = $("dogWalkAdvice");
-    if (dogWalkElement) {
-        dogWalkElement.textContent = `${dogWalkMessage}`;
-        console.log("Dog walk advice updated successfully!");
-    } else {
-        console.error("Element with id 'dogWalkAdvice' not found!");
-    }
+    // =============================================
+    // ⏰ STATUS UPDATE
+    // =============================================
     
     const statusUpdate = $("status");
     if (statusUpdate) {
@@ -375,49 +360,7 @@ async function loadWeather() {
 }
 
 // =============================================
-// NEW: EVENT LISTENERS FOR DROPDOWN
-// =============================================
-
-// Search input - show suggestions as user types
-$("locationInput").addEventListener("input", async function() {
-    const query = this.value.trim();
-    const dropdown = document.getElementById('suggestionsDropdown');
-    
-    if (query.length < 2) {
-        if (dropdown) dropdown.style.display = 'none';
-        return;
-    }
-    
-    const locations = await searchLocations(query);
-    showSuggestions(locations);
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-    const searchArea = document.querySelector('.search-area');
-    const dropdown = document.getElementById('suggestionsDropdown');
-    
-    if (searchArea && !searchArea.contains(e.target)) {
-        if (dropdown) dropdown.style.display = 'none';
-    }
-});
-
-// Handle Enter key on input
-$("locationInput").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-        const dropdown = document.getElementById('suggestionsDropdown');
-        // If dropdown is open and has items, select the first one
-        if (dropdown && dropdown.style.display === 'block' && dropdown.children.length > 0) {
-            dropdown.children[0].click();
-        } else {
-            // Otherwise do regular search
-            $("searchSubmit").click();
-        }
-    }
-});
-
-// =============================================
-// EXISTING EVENT LISTENERS (kept the same)
+// 🔘 EVENT LISTENERS
 // =============================================
 
 $("searchButton").addEventListener("click", () => {
@@ -437,7 +380,7 @@ $("searchSubmit").addEventListener("click", async () => {
 });
 
 // =============================================
-// INITIAL LOAD
+// 🚀 INITIAL LOAD
 // =============================================
 
 loadWeather().catch((error) => {
